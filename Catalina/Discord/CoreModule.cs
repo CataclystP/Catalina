@@ -14,6 +14,334 @@ namespace Catalina.Discord
 {
     class CoreModule : BaseCommandModule
     {
+        [Command("Setrolecolour")]
+        [Description("Set your role color!")]
+        [Aliases("colour", "rolecolour", "setcolour", "setrolecolor", "color", "rolecolor")]
+        public async Task SetRoleColor(CommandContext ctx, string color = null)
+        {
+            using var database = new DatabaseContextFactory().CreateDbContext();
+
+            DiscordEmbed discordEmbed;
+            {
+                if (string.IsNullOrEmpty(color))
+                {
+                    discordEmbed = new DiscordEmbedBuilder
+                    {
+                        Title = "Sorry!",
+                        Description = "You didn't provide a colour! try " + Environment.GetEnvironmentVariable(AppProperties.BotPrefix) + "color #ff0000 for red!",
+                        Color = DiscordColor.Red
+                    }.Build();
+                    await ctx.RespondAsync(discordEmbed);
+                    return;
+                }
+
+                color = color.Replace("#", string.Empty);
+
+                if (database.Roles.AsNoTracking().Where(g => g.userID == ctx.User.Id && g.guildID == ctx.Guild.Id).Count() > 0)
+                {
+                    var role = database.Roles.AsNoTracking().Where(r => r.userID == ctx.Member.Id).FirstOrDefault();
+                    DiscordRole discordRole = null;
+                    DiscordColor? roleColor = null;
+                    try
+                    {
+                        discordRole = ctx.Guild.GetRole(role.roleID.Value);
+
+                    }
+                    catch
+                    {
+                        discordEmbed = new DiscordEmbedBuilder
+                        {
+                            Title = "Sorry!",
+                            Description = "The role your user is associated with does not exist!\nTell a mod or admin to run " + Environment.GetEnvironmentVariable(AppProperties.BotPrefix) + "associaterole.",
+                            Color = DiscordColor.Red
+                        }.Build();
+                        await ctx.RespondAsync(discordEmbed);
+                        return;
+                    }
+
+                    try
+                    {
+                        roleColor = new DiscordColor(color);
+                    }
+                    catch
+                    {
+                        discordEmbed = new DiscordEmbedBuilder
+                        {
+                            Title = "Sorry!",
+                            Description = "The color your provided is invalid. use a hexadecimal value prefixed with # (e.g #FFFFFF)",
+                            Color = DiscordColor.Red
+                        }.Build();
+                        await ctx.RespondAsync(discordEmbed);
+                        return;
+                    }
+
+
+                    if (discordRole is not null && roleColor.HasValue)
+                    {
+                        try
+                        {
+                            await discordRole.ModifyAsync(color: roleColor.Value);
+                            discordEmbed = new DiscordEmbedBuilder
+                            {
+                                Title = "Done!",
+                                Description = "Color changed!",
+                                Color = roleColor.Value
+                            }.Build();
+                            await ctx.RespondAsync(discordEmbed);
+                        }
+                        catch
+                        {
+                            discordEmbed = new DiscordEmbedBuilder
+                            {
+                                Title = "Sorry!",
+                                Description = "Could not change the color of your role. please yell at <@!194439970797256706> directly.",
+                                Color = DiscordColor.Red
+                            }.Build();
+                            await ctx.RespondAsync(discordEmbed);
+                        }
+                    }
+                }
+
+                else if (database.Roles.AsNoTracking().Where(g => g.guildID == ctx.Guild.Id && !g.userID.HasValue).Count() > 0) {
+                    var role = database.Roles.AsNoTracking().Where(g => g.guildID == ctx.Guild.Id && !g.userID.HasValue).FirstOrDefault();
+                    DiscordRole discordRole = null;
+                    DiscordColor? roleColor = null;
+                    try
+                    {
+                        discordRole = ctx.Guild.GetRole(role.roleID.Value);
+
+                    }
+                    catch
+                    {
+                        discordEmbed = new DiscordEmbedBuilder
+                        {
+                            Title = "Sorry!",
+                            Description = "The role your user is associated with does not exist!\nTell a mod or admin to run " + Environment.GetEnvironmentVariable(AppProperties.BotPrefix) + "associaterole.",
+                            Color = DiscordColor.Red
+                        }.Build();
+                        await ctx.RespondAsync(discordEmbed);
+                        return;
+                    }
+
+                    try
+                    {
+                        roleColor = new DiscordColor(color);
+                    }
+                    catch
+                    {
+                        discordEmbed = new DiscordEmbedBuilder
+                        {
+                            Title = "Sorry!",
+                            Description = "The color your provided is invalid. use a hexadecimal value prefixed with # (e.g #FFFFFF)",
+                            Color = DiscordColor.Red
+                        }.Build();
+                        await ctx.RespondAsync(discordEmbed);
+                        return;
+                    }
+
+
+                    if (discordRole is not null && roleColor.HasValue)
+                    {
+                        try
+                        {
+                            await discordRole.ModifyAsync(color: roleColor.Value);
+                            discordEmbed = new DiscordEmbedBuilder
+                            {
+                                Title = "Done!",
+                                Description = "Color changed!",
+                                Color = roleColor.Value
+                            }.Build();
+                            await ctx.RespondAsync(discordEmbed);
+                        }
+                        catch
+                        {
+                            discordEmbed = new DiscordEmbedBuilder
+                            {
+                                Title = "Sorry!",
+                                Description = "Could not change the color of your role. please yell at <@!194439970797256706> directly.",
+                                Color = DiscordColor.Red
+                            }.Build();
+                            await ctx.RespondAsync(discordEmbed);
+                        }
+                    }
+                }
+            }
+        }
+
+        [Command("AssociateServer")]
+        [Description("Associates a role with a user. This is an admin only command.")]
+        [Aliases("setserver")]
+        public async Task AssociateServer(CommandContext ctx, string roleID = null)
+        {
+            using var database = new DatabaseContextFactory().CreateDbContext();
+
+            DiscordEmbed discordEmbed;
+            var verification = await IsVerifiedAsync(ctx, true);
+            if (verification == PermissionCode.Qualify)
+            {
+                if (string.IsNullOrEmpty(roleID))
+                {
+                    discordEmbed = new DiscordEmbedBuilder
+                    {
+                        Title = "Sorry!",
+                        Description = "You didn't provide a roleID, try ct!help setrole",
+                        Color = DiscordColor.Red
+                    }.Build();
+                    await ctx.RespondAsync(discordEmbed);
+                    return;
+                }
+
+                ulong rID = 0; ulong gID = ctx.Guild.Id;
+                //parse check
+                try
+                {
+                    rID = Convert.ToUInt64(roleID);
+                }
+                catch
+                {
+                    discordEmbed = new DiscordEmbedBuilder
+                    {
+                        Title = "Sorry!",
+                        Description = "The role or user you provided was invalid!",
+                        Color = DiscordColor.Red
+                    }.Build();
+                    await ctx.RespondAsync(discordEmbed);
+                    return;
+                }
+
+
+                if (database.Roles.AsNoTracking().Select(r => r.roleID).Contains(rID))
+                {
+                    database.Roles.Remove(database.Roles.AsNoTracking().Where(r => r.roleID == rID).First());
+                }
+
+                DiscordRole role = null;
+                try
+                {
+                    //if a user was mentioned
+                    role = ctx.Guild.GetRole(rID);
+                }
+                catch { }
+
+                if (role is not null)
+                {
+                    database.Roles.Add(new Role { roleID = ulong.Parse(roleID), guildID = ctx.Guild.Id });
+                    discordEmbed = new DiscordEmbedBuilder
+                    {
+                        Title = "Done!",
+                        Description = "Added to internal list of roles",
+                        Color = role.Color
+                    }.Build();
+                    await ctx.RespondAsync(discordEmbed);
+                }
+                else
+                {
+                    discordEmbed = new DiscordEmbedBuilder
+                    {
+                        Title = "Sorry!",
+                        Description = "The role or user you provided was invalid!",
+                        Color = DiscordColor.Red
+                    }.Build();
+                    await ctx.RespondAsync(discordEmbed);
+                    return;
+                }
+                await database.SaveChangesAsync();
+            }
+        }
+
+        [Command("AssociateRole")]
+        [Description("Associates a role with a user. This is an admin only command.")]
+        [Aliases("setrole")]
+        public async Task AsssociateUser(CommandContext ctx, string userID = null, string roleID = null)
+        {
+            using var database = new DatabaseContextFactory().CreateDbContext();
+
+            DiscordEmbed discordEmbed;
+            var verification = await IsVerifiedAsync(ctx, true);
+            if (verification == PermissionCode.Qualify)
+            {
+                if (string.IsNullOrEmpty(userID) || string.IsNullOrEmpty(roleID))
+                {
+                    discordEmbed = new DiscordEmbedBuilder
+                    {
+                        Title = "Sorry!",
+                        Description = "You didn't provide a userid nor roleID, try ct!help setrole",
+                        Color = DiscordColor.Red
+                    }.Build();
+                    await ctx.RespondAsync(discordEmbed);
+                    return;
+                }
+
+                ulong uID = 0, rID = 0;
+                //parse check
+                try
+                {
+                    uID = Convert.ToUInt64(userID);
+                    rID = Convert.ToUInt64(roleID);
+                }
+                catch
+                {
+                    discordEmbed = new DiscordEmbedBuilder
+                    {
+                        Title = "Sorry!",
+                        Description = "The role or user you provided was invalid!",
+                        Color = DiscordColor.Red
+                    }.Build();
+                    await ctx.RespondAsync(discordEmbed);
+                    return;
+                }
+
+
+                if (database.Roles.AsNoTracking().Select(r => r.userID).Contains(uID))
+                {
+                    database.Roles.Remove(database.Roles.AsNoTracking().Where(r => r.userID == uID).First());
+                }
+
+                DiscordUser user = null;
+                DiscordRole role = null;
+                try
+                {
+                    //if a user was mentioned
+                    if (ctx.Message.MentionedUsers.Count > 0)
+                    {
+                        user = ctx.Message.MentionedUsers.First();
+                    }
+                    //otherwise try getting the user manually
+                    else
+                    {
+                        user = await ctx.Guild.GetMemberAsync(ulong.Parse(userID));
+                    }
+
+                    role = ctx.Guild.GetRole(ulong.Parse(roleID));
+                } catch { }
+
+                if (user is not null && role is not null)
+                {
+                    database.Roles.Add(new Role { roleID = ulong.Parse(roleID), userID = ulong.Parse(userID), guildID = ctx.Guild.Id });
+                    discordEmbed = new DiscordEmbedBuilder
+                    {
+                        Title = "Done!",
+                        Description = "Added to internal list of roles",
+                        Color = role.Color
+                    }.Build();
+                    await ctx.RespondAsync(discordEmbed);
+                }
+                else
+                {
+                    discordEmbed = new DiscordEmbedBuilder
+                    {
+                        Title = "Sorry!",
+                        Description = "The role or user you provided was invalid!",
+                        Color = DiscordColor.Red
+                    }.Build();
+                    await ctx.RespondAsync(discordEmbed);
+                    return;
+                }
+
+
+                await database.SaveChangesAsync();
+            }
+        }
 
         [Command("Setbasicrole")]
         [Description("Set the basic role for your server! This is an admin exclusive command.")]
@@ -143,13 +471,7 @@ namespace Catalina.Discord
 
                         if (message != null && emoji != null && role != null)
                         {
-                            discordEmbed = new DiscordEmbedBuilder
-                            {
-                                Title = "Done!",
-                                Description = "Added to internal list of reactions",
-                                Color = role.Color
-                            }.Build();
-                            await ctx.RespondAsync(discordEmbed);
+                            
                             var reaction = new Reaction
                             {
                                 MessageID = message.Id,
