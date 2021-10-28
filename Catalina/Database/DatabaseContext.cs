@@ -11,6 +11,7 @@ namespace Catalina.Database
         public DbSet<GuildProperty> GuildProperties { get; set; }
         public DbSet<Response> Responses { get; set; }
         public DbSet<Reaction> Reactions { get; set; }
+        public DbSet<Role> Roles { get; set; }
 
         public async Task AddReactionAsync(Reaction reaction)
         {
