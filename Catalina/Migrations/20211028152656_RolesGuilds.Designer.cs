@@ -3,14 +3,16 @@ using System;
 using Catalina.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Catalina.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20211028152656_RolesGuilds")]
+    partial class RolesGuilds
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -90,20 +92,17 @@ namespace Catalina.Migrations
 
             modelBuilder.Entity("Catalina.Database.Models.Role", b =>
                 {
-                    b.Property<ulong>("ID")
+                    b.Property<ulong>("roleID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint unsigned");
 
-                    b.Property<ulong?>("guildID")
+                    b.Property<ulong>("guildID")
                         .HasColumnType("bigint unsigned");
 
-                    b.Property<ulong?>("roleID")
+                    b.Property<ulong>("userID")
                         .HasColumnType("bigint unsigned");
 
-                    b.Property<ulong?>("userID")
-                        .HasColumnType("bigint unsigned");
-
-                    b.HasKey("ID");
+                    b.HasKey("roleID");
 
                     b.ToTable("Roles");
                 });
