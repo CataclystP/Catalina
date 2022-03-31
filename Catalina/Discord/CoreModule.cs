@@ -741,7 +741,7 @@ namespace Catalina.Discord
             using var database = new DatabaseContextFactory().CreateDbContext();
 
             DiscordEmbed discordEmbed;
-            if (ctx.Member.IsOwner || ctx.Member.Roles.Any(t => t.Permissions == DSharpPlus.Permissions.Administrator || t.Permissions == DSharpPlus.Permissions.ManageGuild))
+            if (ctx.Member.IsOwner || ctx.Member.Roles.Any(t => t.Permissions == DSharpPlus.Permissions.Administrator || t.Permissions == DSharpPlus.Permissions.BanMembers || t.Permissions == DSharpPlus.Permissions.ManageChannels))
             {
                 return PermissionCode.Qualify;
             }

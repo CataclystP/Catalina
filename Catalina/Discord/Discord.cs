@@ -20,7 +20,6 @@ namespace Catalina.Discord
     {
         static SerilogLoggerFactory logFactory;
         public static DiscordClient discord;
-        public static List<DiscordChannel?> commandChannels;
         public static async Task SetupClient()
         {
             Log.Logger = new LoggerConfiguration().WriteTo.Console()
@@ -66,34 +65,6 @@ namespace Catalina.Discord
             };
 
             await discord.ConnectAsync(discordActivity);
-            await UpdateChannels();
-        }
-        public static async Task UpdateChannels()
-        {
-            using var database = new DatabaseContextFactory().CreateDbContext();
-
-            commandChannels = new List<DiscordChannel>();
-            var guildProperties = database.GuildProperties.AsNoTracking();
-            if (guildProperties.All( g => string.IsNullOrEmpty(g.CommandChannelsSerialised)))
-            {
-                return;
-            }
-            foreach (var channels in guildProperties.Where(g => !string.IsNullOrEmpty(g.CommandChannelsSerialised)).Select(g => g.CommandChannels))
-            {
-                foreach (var channel in channels)
-                {
-                    try
-                    {
-                        commandChannels.Add(await discord.GetChannelAsync(channel));
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Information(e.GetType() + " error when getting channel id " + channel);
-                    }
-                }
-                
-            }
-
         }
 
         public static async Task<DiscordEmoji> GetEmojiFromMessage(CommandContext ctx)

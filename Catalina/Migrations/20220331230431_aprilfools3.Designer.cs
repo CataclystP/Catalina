@@ -3,14 +3,16 @@ using System;
 using Catalina.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Catalina.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20220331230431_aprilfools3")]
+    partial class aprilfools3
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,9 +24,6 @@ namespace Catalina.Migrations
                     b.Property<ulong>("ID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint unsigned");
-
-                    b.Property<string>("AdminRoleIDsSerialised")
-                        .HasColumnType("longtext");
 
                     b.Property<ulong?>("DefaultRole")
                         .HasColumnType("bigint unsigned");
