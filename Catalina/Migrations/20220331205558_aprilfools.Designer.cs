@@ -3,14 +3,16 @@ using System;
 using Catalina.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Catalina.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20220331205558_aprilfools")]
+    partial class aprilfools
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -38,23 +40,6 @@ namespace Catalina.Migrations
                     b.HasKey("ID");
 
                     b.ToTable("GuildProperties");
-                });
-
-            modelBuilder.Entity("Catalina.Database.Models.GuildUser", b =>
-                {
-                    b.Property<ulong>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint unsigned");
-
-                    b.Property<ulong>("DiscordID")
-                        .HasColumnType("bigint unsigned");
-
-                    b.Property<int>("Score")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("GuildUsers");
                 });
 
             modelBuilder.Entity("Catalina.Database.Models.Reaction", b =>

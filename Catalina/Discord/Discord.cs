@@ -44,6 +44,7 @@ namespace Catalina.Discord
             });
 
             commands.RegisterCommands<CoreModule>();
+            commands.RegisterCommands<FoolsModule>();
 
             discord.UseInteractivity(new InteractivityConfiguration()
             {
@@ -52,6 +53,7 @@ namespace Catalina.Discord
             });
 
             discord.GuildMemberAdded += Events.Discord_GuildMemberAdded;
+            discord.MessageCreated += Events.Discord_MessageCreated;
             discord.MessageDeleted += Events.Discord_MessageDeleted;
             discord.MessageReactionAdded += Events.Discord_ReactionAdded;
             discord.MessageReactionRemoved += Events.Discord_ReactionRemoved;

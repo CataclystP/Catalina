@@ -66,9 +66,57 @@ namespace Catalina.Discord
             }
         }
 
-        internal static Task Discord_MessageCreated(DiscordClient sender, MessageCreateEventArgs e)
+        internal static async Task Discord_MessageCreated(DiscordClient sender, MessageCreateEventArgs e)
         {
-            throw new NotImplementedException();
+
+            if (e.Author.IsBot || e.Author.Discriminator == "0000") return;
+            using var database = new DatabaseContextFactory().CreateDbContext();
+            var responses = database.Responses.AsNoTracking().Where(r => r.GuildID == e.Guild.Id).ToList();
+
+            if (responses.Count > 0 && responses.Select(r => r.Trigger.ToLower()).Any(t => t == e.Message.Content.ToLower()))
+            {
+                var response = responses.Where(r => r.Trigger.ToLower() == e.Message.Content.ToLower()).First();
+                var message = await e.Message.RespondAsync(response.Content);
+
+                int chance = (int) MathF.Abs(response.Bonus);
+                int randomResult = Program.Random.Next(0, 1000);
+
+                Log.Debug(chance + " / 1000, rolled " + randomResult);
+                if (response.Bonus < 0 && randomResult < chance)
+                {
+                    await message.ModifyAsync(content: string.Format(message.Content + "\nfyi: you lost {0} favour with me for that. you have {1} favour with me.", response.Bonus, database.GuildUsers.Where(u => u.DiscordID == e.Author.Id).First().Score));
+                    if (database.GuildUsers.Any(u => u.DiscordID == e.Author.Id))
+                    {
+                        database.GuildUsers.Where(u => u.DiscordID == e.Author.Id).First().Score += response.Bonus;
+                    }
+                    else
+                    {
+                        database.GuildUsers.Add(new Database.Models.GuildUser
+                        {
+                            DiscordID = e.Author.Id,
+                            Score = response.Bonus
+                        });
+                    }
+                }
+                else if (response.Bonus > 0 && randomResult < chance)
+                {
+                    await message.ModifyAsync(content: string.Format(message.Content + "\nfyi: you gained {0} favour with me for that. you have {1} favour with me.", response.Bonus, database.GuildUsers.Where(u => u.DiscordID == e.Author.Id).First().Score));
+                    if (database.GuildUsers.Any(u => u.DiscordID == e.Author.Id))
+                {
+                    database.GuildUsers.Where(u => u.DiscordID == e.Author.Id).First().Score += response.Bonus;
+                }
+                else
+                {
+                    database.GuildUsers.Add(new Database.Models.GuildUser
+                    {
+                        DiscordID = e.Author.Id,
+                        Score = response.Bonus
+                    });
+                }
+                }
+                await database.SaveChangesAsync();
+               
+            }
         }
 
         internal static async Task Discord_ReactionsCleared(DiscordClient sender, MessageReactionsClearEventArgs e)

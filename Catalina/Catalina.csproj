@@ -25,9 +25,9 @@
 
   <ItemGroup>
     <PackageReference Include="dotenv.net" Version="3.0.0" />
-    <PackageReference Include="DSharpPlus" Version="4.1.0-nightly-00892" />
-    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.1.0-nightly-00892" />
-    <PackageReference Include="DSharpPlus.Interactivity" Version="4.1.0-nightly-00892" />
+    <PackageReference Include="DSharpPlus" Version="4.1.0" />
+    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.1.0" />
+    <PackageReference Include="DSharpPlus.Interactivity" Version="4.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.7" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.7">
       <PrivateAssets>all</PrivateAssets>
