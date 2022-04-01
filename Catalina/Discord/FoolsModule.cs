@@ -62,6 +62,10 @@ namespace Catalina.Discord
                     await RemoveResponseAsync(ctx, name);
                     break;
 
+                case "clear":
+                    await ClearResponsesAsync(ctx, name);
+                    break;
+
                 case "list":
                 default:
                     await ListResponses(ctx);
@@ -188,6 +192,44 @@ namespace Catalina.Discord
                 await ctx.RespondAsync(discordEmbed);
 
                 return true;
+            }
+            return false;
+        }
+
+        public static async Task<bool> ClearResponsesAsync(CommandContext ctx, string confirmation)
+        {
+            using var database = new DatabaseContextFactory().CreateDbContext();
+
+            DiscordEmbed discordEmbed;
+            var verification = await CoreModule.IsVerifiedAsync(ctx, true);
+            if (verification == PermissionCode.Qualify)
+            {
+                if (!string.IsNullOrEmpty(confirmation) && confirmation.Contains("CONFIRM")) {
+                    database.Responses.RemoveRange(database.Responses.Where(r => r.GuildID == ctx.Guild.Id));
+                    _ = database.SaveChangesAsync();
+
+                    discordEmbed = new DiscordEmbedBuilder
+                    {
+                        Title = "Success!",
+                        Description = "Responses cleared!",
+                        Color = DiscordColor.Green
+                    }.Build();
+                    await ctx.RespondAsync(discordEmbed);
+
+                    return true;
+                }
+                else 
+                {
+                    discordEmbed = new DiscordEmbedBuilder
+                    {
+                        Title = "Uh oh!",
+                        Description = "You didn't confirm to clear responses. try again with `" + Environment.GetEnvironmentVariable(AppProperties.BotPrefix) + "response clear CONFIRM`, with confirm being capitalised.",
+                        Color = DiscordColor.Red
+                    }.Build();
+                    await ctx.RespondAsync(discordEmbed);
+
+                    return false;
+                }
             }
             return false;
         }
