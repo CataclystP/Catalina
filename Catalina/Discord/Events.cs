@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Catalina.Database.Models;
 
 namespace Catalina.Discord
 {
@@ -73,52 +74,59 @@ namespace Catalina.Discord
             using var database = new DatabaseContextFactory().CreateDbContext();
             var responses = database.Responses.AsNoTracking().Where(r => r.GuildID == e.Guild.Id).ToList();
 
-            if (responses.Count > 0 && responses.Select(r => r.Trigger.ToLower()).Any(t => t == e.Message.Content.ToLower()))
+            if (responses.Count > 0)
             {
-                var response = responses.Where(r => r.Trigger.ToLower() == e.Message.Content.ToLower()).First();
-                var message = await e.Message.RespondAsync(response.Content);
-
-                int chance = (int) MathF.Abs(response.Bonus);
-                int randomResult = Program.Random.Next(0, 1000);
-
-                Log.Debug(chance + " / 1000, rolled " + randomResult);
-                if (response.Bonus < 0 && (chance > 1000 || randomResult < chance))
-                {  
-                    if (database.GuildUsers.Any(u => u.DiscordID == e.Author.Id))
-                    {
-                        database.GuildUsers.Where(u => u.DiscordID == e.Author.Id).First().Score += response.Bonus;
-                    }
-                    else
-                    {
-                        database.GuildUsers.Add(new Database.Models.GuildUser
-                        {
-                            DiscordID = e.Author.Id,
-                            Score = response.Bonus
-                        });
-                        await database.SaveChangesAsync();
-                    }
-                    await message.ModifyAsync(content: string.Format(message.Content + "\nfyi: you lost {0} favour with me for that. you have {1} favour with me.", response.Bonus, database.GuildUsers.Where(u => u.DiscordID == e.Author.Id).First().Score));
-                   
-                }
-                else if (response.Bonus > 0 && (chance > 1000 || randomResult < chance))
+                var matches = responses.Where(r => e.Message.Content.ToLower().Contains(r.Trigger.ToLower())).ToList();
+                if (matches.Count > 0)
                 {
-                    
-                    if (database.GuildUsers.Any(u => u.DiscordID == e.Author.Id))
+                    var response = matches.ElementAt(Program.Random.Next(0, matches.Count));
+
+                    var message = await e.Message.RespondAsync(response.Content);
+
+                    int chance = (int)MathF.Abs(response.Bonus);
+                    int randomResult = Program.Random.Next(0, 1000);
+
+                    if (response.Bonus < 0 && (chance > 1000 || randomResult < chance))
                     {
-                        database.GuildUsers.Where(u => u.DiscordID == e.Author.Id).First().Score += response.Bonus;
-                    }
-                    else
-                    {
-                    database.GuildUsers.Add(new Database.Models.GuildUser
+                        if (database.GuildUsers.Any(u => u.DiscordID == e.Author.Id))
                         {
-                            DiscordID = e.Author.Id,
-                            Score = response.Bonus
-                        });
-                        await database.SaveChangesAsync();
+                            database.GuildUsers.Where(u => u.DiscordID == e.Author.Id).First().Score += response.Bonus;
+                        }
+                        else
+                        {
+                            database.GuildUsers.Add(new GuildUser
+                            {
+                                DiscordID = e.Author.Id,
+                                Score = response.Bonus
+                            });
+                            await database.SaveChangesAsync();
+                        }
+                        await message.ModifyAsync(content: string.Format(message.Content + "\nfyi: you lost {0} favour with me for that. you have {1} favour with me.", response.Bonus, database.GuildUsers.Where(u => u.DiscordID == e.Author.Id).First().Score));
+
                     }
-                    await message.ModifyAsync(content: string.Format(message.Content + "\nfyi: you gained {0} favour with me for that. you have {1} favour with me.", response.Bonus, database.GuildUsers.Where(u => u.DiscordID == e.Author.Id).First().Score));
+                    else if (response.Bonus > 0 && (chance > 1000 || randomResult > chance))
+                    {
+
+                        if (database.GuildUsers.Any(u => u.DiscordID == e.Author.Id))
+                        {
+                            database.GuildUsers.Where(u => u.DiscordID == e.Author.Id).First().Score += response.Bonus;
+                        }
+                        else
+                        {
+                            database.GuildUsers.Add(new GuildUser
+                            {
+                                DiscordID = e.Author.Id,
+                                Score = response.Bonus
+                            });
+                            await database.SaveChangesAsync();
+                        }
+                        await message.ModifyAsync(content: string.Format(message.Content + "\nfyi: you gained {0} favour with me for that. you have {1} favour with me.", response.Bonus, database.GuildUsers.Where(u => u.DiscordID == e.Author.Id).First().Score));
+                    }
+                    await database.SaveChangesAsync();
+
                 }
-                await database.SaveChangesAsync();
+
+                
                
             }
         }
