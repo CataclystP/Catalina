@@ -215,11 +215,10 @@ namespace Catalina.Discord
                 };
                 int currentResponse = 0; int responsesLeft = responses.Count - (i * 25);
 
-                    for (int j = i * 25; j < (i * 25) + MathF.Min(25, responsesLeft); j += 2)
+                    for (int j = i * 25; j < (i * 25) + MathF.Min(25, responsesLeft); j ++)
                     {
                         currentResponse++;
-                        if (j < (responses.Count - 1)) discordEmbed.AddField(responses[j].Name, responses[j + 1].Name);
-                        else discordEmbed.AddField(responses[j].Name, "**[end of list]**");
+                        discordEmbed.AddField(responses[j].Name, '"' + responses[j].Trigger + '"');;
                     }
                     discordEmbed.Build();
                     await ctx.Message.RespondAsync(discordEmbed);
@@ -237,13 +236,9 @@ namespace Catalina.Discord
                     Color = DiscordColor.Blue
                 };
 
-                for (int i = 0; i < responses.Count; i+=2)
+                for (int i = 0; i < responses.Count; i++)
                 {
-                    
-                    if (i < responses.Count - 1) discordEmbed.AddField(responses[i].Name, responses[i + 1].Name);
-                    else discordEmbed.AddField(responses[i].Name, "**[end of list]**");
-
-                    
+                    discordEmbed.AddField(responses[i].Name, '"' + responses[i].Trigger + '"');
                 }
                 discordEmbed.Build();
                 await ctx.Message.RespondAsync(discordEmbed);
