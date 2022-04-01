@@ -203,19 +203,19 @@ namespace Catalina.Discord
                 Color = DiscordColor.Red
             };
 
-            if (responses.Count > 100)
+            if (responses.Count > 25)
             {
-                for (int i = 0; i < MathF.Floor(responses.Count / 100) + 1; i++)
+                for (int i = 0; i < MathF.Floor(responses.Count / 25) + 1; i++)
                 {
-                    discordEmbed = new DiscordEmbedBuilder
-                    {
-                        Title = "Success!",
-                        Description = string.Format("Responses for this server: {0}/{1}", i + 1, MathF.Floor(responses.Count / 100) + 1),
-                        Color = DiscordColor.Blue
-                    };
-                    int currentResponse = 0; int responsesLeft = responses.Count - (i * 100);
+                discordEmbed = new DiscordEmbedBuilder
+                {
+                    Title = "Success!",
+                    Description = string.Format("Responses for this server: {0}/{1}", i + 1, MathF.Floor(responses.Count / 25) + 1),
+                    Color = DiscordColor.Blue
+                };
+                int currentResponse = 0; int responsesLeft = responses.Count - (i * 25);
 
-                    for (int j = i * 100; j < responses.Count - (i * 100); j+=2)
+                    for (int j = i * 25; j < (i * 25) + MathF.Min(25, responsesLeft); j += 2)
                     {
                         currentResponse++;
                         if (j < (responses.Count - 1)) discordEmbed.AddField(responses[j].Name, responses[j + 1].Name);
@@ -223,6 +223,7 @@ namespace Catalina.Discord
                     }
                     discordEmbed.Build();
                     await ctx.Message.RespondAsync(discordEmbed);
+
                 }
 
             }
