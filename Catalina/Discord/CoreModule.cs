@@ -480,16 +480,19 @@ namespace Catalina.Discord
                                 ChannelID = message.Channel.Id,
                                 GuildID = ctx.Guild.Id
                             };
-                            
-                            //(message.Id, emoji.Name, role.Id, message.Channel.Id);
 
-                                //var reactions = ConfigValues.Reactions.GetValueOrDefault(ctx.Guild.Id);
-                                //reactions.Add(reaction);
+                            discordEmbed = new DiscordEmbedBuilder
+                            {
+                                Title = "Done!",
+                                Description = "Added to internal list of reactions",
+                                Color = role.Color
+                            }.Build();
 
                             database.Reactions.Add(reaction);
 
                             await database.SaveChangesAsync();
                             await message.CreateReactionAsync(emoji);
+                            await ctx.RespondAsync(discordEmbed);
 
                         }
                         else
